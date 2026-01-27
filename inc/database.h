@@ -1,9 +1,12 @@
 #ifndef INC_DATABASE_H_
 #define INC_DATABASE_H_
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <math.h>
 
-#define STARTING_CAPACITY 100
+#define MAX_CAPACITY 100000
 
 enum Type {
     INT,
@@ -34,6 +37,20 @@ entry_t create_entry(char* key, value_t val);
 void print_entry(entry_t entry);
 
 typedef struct {
-    entry_t* database;
-} database;
+    entry_t entry; 
+    int next;
+} node_t;
+
+typedef struct {
+    node_t nodes[MAX_CAPACITY];         // stores all nodes free or used
+    int entries[MAX_CAPACITY];          // stores index to first node in bucket 
+    int size;                           // keeps track of size to make sure it doesn't excede MAX_CAPACITY
+    int head;                           // keeps track of first free node
+} database_t;
+
+unsigned int hash_str(char* key);
+database_t init_database();
+void set(database_t* database, char* key, value_t value);
+value_t get(database_t* database, char* key);
+void del(database_t* database, char* key);
 #endif

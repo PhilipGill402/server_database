@@ -11,7 +11,8 @@
 enum Type {
     INT,
     DOUBLE,
-    STRING
+    STRING,
+    NOTFOUND
 };
 
 typedef struct {
@@ -26,11 +27,12 @@ typedef struct {
 value_t make_int(int val);
 value_t make_double(double val);
 value_t make_string(char* val);
+int values_equal(value_t a, value_t b);
 void print_value(value_t val);
 
 typedef struct {
-    value_t val;
-    char* key;
+    value_t val;        // the value can change as this does not affect the hash
+    const char* key;    // once key is created it can't change due to that changing the hash
 } entry_t;
 
 entry_t create_entry(char* key, value_t val);
@@ -48,7 +50,7 @@ typedef struct {
     int head;                           // keeps track of first free node
 } database_t;
 
-unsigned int hash_str(char* key);
+int hash_str(char* key);
 database_t init_database();
 void set(database_t* database, char* key, value_t value);
 value_t get(database_t* database, char* key);

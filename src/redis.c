@@ -8,7 +8,11 @@ int main() {
     
     database_t database = init_database();
     
-    set(&database, "int", i);
+    set(&database, "hello", d);
+
+    value_t val = get(&database, "hello");
+    print_value(val);
+    del(&database, "hello");
 
     return 0;
 }

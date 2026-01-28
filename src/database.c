@@ -33,11 +33,26 @@ value_t make_string(char* val) {
     return ret;
 }
 
+int values_equal(value_t a, value_t b) {
+    // if the types aren't equal then they aren't equal 
+    if (a.type != b.type) {
+        return 0;
+    }
+
+    switch (a.type) {
+        case INT: return a.value.i == b.value.i;
+        case DOUBLE: return a.value.d == b.value.d;
+        case STRING: return a.value.s == b.value.s;
+        default: return 0; 
+    }
+}
+
 void print_value(value_t val) {
     switch (val.type) {
         case INT: printf("%d", val.value.i); break;
         case DOUBLE: printf("%f", val.value.d); break;
         case STRING: printf("%s", val.value.s); break;
+        case NOTFOUND: printf("Could not find value at key: %s", val.value.s); break;
         default: printf("Type not recognized");
     } 
 }
@@ -70,17 +85,16 @@ void print_entry(entry_t entry) {
  * */
 
 //TODO: cache powers of p for optimization
-unsigned int hash_str(char* key) {
+int hash_str(char* key) {
     unsigned int p = 67;
-    int hash = 0; 
+    unsigned int hash = 0; 
 
     for (int i = 0; i < strlen(key); i++) {
         hash += (key[i] - 'a' + 1) * (int)pow((double)p, (double)i);
     }
     
     hash = hash % (unsigned)(MAX_CAPACITY);
-
-    return hash;
+    return (int)hash;
 }
 
 database_t init_database() {
@@ -133,7 +147,7 @@ void set(database_t* database, char* key, value_t value) {
         database->entries[hash] = idx; 
     } else {
         node_t curr_node = database->nodes[database->entries[hash]];
-        while(curr_node.next == -1) {
+        while(curr_node.next != -1) {
             curr_node = database->nodes[curr_node.next];
         }
 
@@ -142,9 +156,64 @@ void set(database_t* database, char* key, value_t value) {
 }
 
 value_t get(database_t* database, char* key) {
-    printf("GET NOT YET IMPLEMENTED\n");
+    int hash = hash_str(key);
+    
+    // there is no node with this hash in nodes
+    if (database->entries[hash] == -1) {
+        value_t ret = {
+            .type = NOTFOUND,
+            .value.s = key
+        };
+
+        return ret; 
+    }
+
+    node_t curr_node = database->nodes[database->entries[hash]];
+    while(key != curr_node.entry.key && curr_node.next != -1) {
+        curr_node = database->nodes[curr_node.next];
+    }
+    
+    // check if we found the node 
+    if (curr_node.entry.key == key) {
+        return curr_node.entry.val;
+    }
+    
+    value_t ret = {
+        .type = NOTFOUND,
+        .value.s = key
+    };
+
+    return ret;
 }
 
 void del(database_t* database, char* key) {
-    printf("DEL NOT IMPLEMENTED\n");
+    int hash = hash_str(key);
+    
+    // hash not found so just return
+    if (database->entries[hash] == -1) {
+        return;
+    }
+    
+    node_t* prev_node = NULL;
+    node_t* curr_node = &database->nodes[database->entries[hash]];
+    while(key != curr_node->entry.key && curr_node->next != -1) {
+        prev_node = curr_node;
+        curr_node = &database->nodes[curr_node->next];
+    }
+    
+    // check if we found the node 
+    if (curr_node->entry.key == key) {
+        int idx = prev_node->next;
+        prev_node->next = curr_node->next; 
+        free_node(database, idx); 
+    }
+    
+    return;
 }
+
+/*
+char msg[strlen(key)];
+for (int i = 0; i < strlen(key); i++) {
+    msg[i] = *key++;
+}
+*/

@@ -49,11 +49,11 @@ int values_equal(value_t a, value_t b) {
 
 void print_value(value_t val) {
     switch (val.type) {
-        case INT: printf("%d", val.value.i); break;
-        case DOUBLE: printf("%f", val.value.d); break;
-        case STRING: printf("%s", val.value.s); break;
-        case NOTFOUND: printf("Could not find value at key: %s", val.value.s); break;
-        default: printf("Type not recognized");
+        case INT: printf("%d", val.value.i); return;
+        case DOUBLE: printf("%f", val.value.d); return;
+        case STRING: printf("%s", val.value.s); return;
+        case NOTFOUND: printf("Could not find value at key: %s", val.value.s); return;
+        default: printf("Type not recognized"); return;
     } 
 }
 
@@ -130,34 +130,47 @@ int get_node(database_t* database) {
 }
 
 void free_node(database_t* database, int idx) {
-    database->nodes[idx].next = database->head;   // sets the first node in the free list to the deleted node
-    database->head = idx;                        // sets the head to the deleted node
+    database->nodes[idx].next = database->head; // sets the first node in the free list to the deleted node
+    database->head = idx;                       // sets the head to the deleted node
 }
 
 void set(database_t* database, char* key, value_t value) {
     entry_t entry = create_entry(key, value);
     unsigned int hash = hash_str(key);
     
-    int idx = get_node(database);
-    database->nodes[idx].entry = entry;
-    database->nodes[idx].next = -1;
     
-    //if nothing is at the hash
+    
+    //if nothing is at the hash create a new node
     if (database->entries[hash] == -1) {
+        int idx = get_node(database);
+        database->nodes[idx].entry = entry;
+        database->nodes[idx].next = -1;
+
         database->entries[hash] = idx; 
     } else {
-        node_t curr_node = database->nodes[database->entries[hash]];
-        while(curr_node.next != -1) {
-            curr_node = database->nodes[curr_node.next];
+        node_t* curr_node = &database->nodes[database->entries[hash]];
+        while(curr_node->next != -1 && strcmp(curr_node->entry.key, key) != 0) {
+            curr_node = &database->nodes[curr_node->next];
+        }
+        
+        // if the key already exists then just replace the value
+        if (strcmp(curr_node->entry.key, key) == 0) {
+            curr_node->entry = entry;
+        } else {
+            // create new node and assign it to the next node in the chain 
+            int idx = get_node(database);
+            database->nodes[idx].entry = entry;
+            database->nodes[idx].next = -1;
+
+            curr_node->next = idx;
         }
 
-        curr_node.next = idx;
     } 
 }
 
 value_t get(database_t* database, char* key) {
     int hash = hash_str(key);
-    
+     
     // there is no node with this hash in nodes
     if (database->entries[hash] == -1) {
         value_t ret = {
@@ -201,11 +214,20 @@ void del(database_t* database, char* key) {
         curr_node = &database->nodes[curr_node->next];
     }
     
+    
     // check if we found the node 
     if (curr_node->entry.key == key) {
-        int idx = prev_node->next;
-        prev_node->next = curr_node->next; 
+        int idx; 
+        if (prev_node == NULL) {
+            idx = database->entries[hash];
+            database->entries[hash] = -1;   // we need to set the node index at the hash to -1 because there are no longer any nodes that correspond to that hash
+        } else {
+            idx = prev_node->next;
+            prev_node->next = curr_node->next; 
+        }
+
         free_node(database, idx); 
+         
     }
     
     return;

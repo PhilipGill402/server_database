@@ -209,7 +209,7 @@ void del(database_t* database, char* key) {
     
     node_t* prev_node = NULL;
     node_t* curr_node = &database->nodes[database->entries[hash]];
-    while(key != curr_node->entry.key && curr_node->next != -1) {
+    while (key != curr_node->entry.key && curr_node->next != -1) {
         prev_node = curr_node;
         curr_node = &database->nodes[curr_node->next];
     }
@@ -231,6 +231,25 @@ void del(database_t* database, char* key) {
     }
     
     return;
+}
+
+int exists(database_t* database, char* key) {
+    int hash = hash_str(key);
+
+    if (database->entries[hash] == -1) {
+        return 0;
+    }
+
+    node_t curr_node = database->nodes[database->entries[hash]];
+    while (key != curr_node.entry.key && curr_node.next != -1) {
+        curr_node = database->nodes[curr_node.next];
+    }
+
+    if (curr_node.entry.key == key) {
+        return 1;
+    }
+
+    return 0;
 }
 
 /*

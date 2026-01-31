@@ -55,4 +55,5 @@ database_t init_database();
 void set(database_t* database, char* key, value_t value);
 value_t get(database_t* database, char* key);
 void del(database_t* database, char* key);
+int exists(database_t* database, char* key);
 #endif

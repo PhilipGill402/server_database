@@ -39,5 +39,10 @@ int main() {
     val2 = get(&database, "what");
     print_value(val2);
     printf("\n");
+
+    printf("%d\n", exists(&database, "hello"));
+    printf("%d\n", exists(&database, "world"));
+    printf("%d\n", exists(&database, "what"));
+    printf("%d\n", exists(&database, "up"));
     return 0;
 }

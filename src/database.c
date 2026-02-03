@@ -53,8 +53,23 @@ void print_value(value_t val) {
         case DOUBLE: printf("%f", val.value.d); return;
         case STRING: printf("%s", val.value.s); return;
         case NOTFOUND: printf("Could not find value at key: %s", val.value.s); return;
+        case NONE: printf("NONE"); return; 
         default: printf("Type not recognized"); return;
     } 
+}
+
+char* val_to_str(value_t val) {
+    char str[100]; 
+    switch (val.type) {
+        case INT: sprintf(str, "%d\n", val.value.i); break;
+        case DOUBLE: sprintf(str, "%f\n", val.value.d); break;
+        case STRING: strcat(str, val.value.s); strcat(str, "\n"); break;
+        case NOTFOUND: strcat(str, "NOT FOUND\n"); break;
+        case NONE: strcat(str, "NONE\n"); break;
+        default: strcat(str, "TYPE NOT RECOGNIZED\n"); break;
+    }
+
+    return str;
 }
 
 /* 
@@ -66,8 +81,12 @@ void print_value(value_t val) {
 entry_t create_entry(char* key, value_t val) {
     entry_t entry = {
         .val = val,
-        .key = key
+        .key = strdup(key) 
     };
+    
+    if (val.type == STRING) {
+        entry.val.value.s = strdup(val.value.s);
+    }
 
     return entry; 
 }
@@ -182,12 +201,12 @@ value_t get(database_t* database, char* key) {
     }
 
     node_t curr_node = database->nodes[database->entries[hash]];
-    while(key != curr_node.entry.key && curr_node.next != -1) {
+    while(strcmp(key, curr_node.entry.key) != 0 && curr_node.next != -1) {
         curr_node = database->nodes[curr_node.next];
     }
     
     // check if we found the node 
-    if (curr_node.entry.key == key) {
+    if (strcmp(key, curr_node.entry.key) == 0) {
         return curr_node.entry.val;
     }
     
@@ -209,14 +228,14 @@ void del(database_t* database, char* key) {
     
     node_t* prev_node = NULL;
     node_t* curr_node = &database->nodes[database->entries[hash]];
-    while (key != curr_node->entry.key && curr_node->next != -1) {
+    while(strcmp(key, curr_node->entry.key) != 0 && curr_node->next != -1) {
         prev_node = curr_node;
         curr_node = &database->nodes[curr_node->next];
     }
     
     
     // check if we found the node 
-    if (curr_node->entry.key == key) {
+    if (strcmp(key, curr_node->entry.key) == 0) {
         int idx; 
         if (prev_node == NULL) {
             idx = database->entries[hash];
@@ -241,11 +260,11 @@ int exists(database_t* database, char* key) {
     }
 
     node_t curr_node = database->nodes[database->entries[hash]];
-    while (key != curr_node.entry.key && curr_node.next != -1) {
+    while (strcmp(key, curr_node.entry.key) != 0 && curr_node.next != -1) {
         curr_node = database->nodes[curr_node.next];
     }
 
-    if (curr_node.entry.key == key) {
+    if (strcmp(key, curr_node.entry.key) == 0) {
         return 1;
     }
 

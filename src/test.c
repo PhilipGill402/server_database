@@ -1,7 +1,6 @@
 #include "test.h"
 
 int test() {
-    
     value_t i = make_int(10);
     value_t d = make_double(10.98);
     value_t s = make_string("hello");

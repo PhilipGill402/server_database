@@ -7,7 +7,6 @@ INC=inc
 
 TARGET=redis
 
-
 SRC_FILES:= $(wildcard $(SRC)/*.c)
 OBJ_FILES:= $(patsubst $(SRC)/%.c,$(OBJ)/%.o,$(SRC_FILES))
 

@@ -12,7 +12,8 @@ enum Type {
     INT,
     DOUBLE,
     STRING,
-    NOTFOUND
+    NOTFOUND,
+    NONE
 };
 
 typedef struct {
@@ -29,6 +30,7 @@ value_t make_double(double val);
 value_t make_string(char* val);
 int values_equal(value_t a, value_t b);
 void print_value(value_t val);
+char* val_to_str(value_t val);
 
 typedef struct {
     value_t val;        // the value can change as this does not affect the hash

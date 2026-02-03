@@ -13,7 +13,7 @@ void signal_handler(int sig){
 void* handle_client(void* arg){
     struct args* args_ptr = (struct args*)arg;
     int client_fd = args_ptr->client_fd;
-    database_t* database = args_ptr->database; 
+    database_t* database = args_ptr->database;
 
     int bytes_read; 
     int bytes_sent;
@@ -31,14 +31,10 @@ void* handle_client(void* arg){
         }
         
         buffer[bytes_read] = '\0';
+        printf("RECEIVED: %s\n", buffer);
         
         command_t command = parse_input(buffer);
-        printf("COMMAND: %s\n", command.command);
-        printf("KEY: %s\n", command.key);
-        printf("VALUE: ");
-        print_value(command.value);
-        printf("\n");
-        
+
         char response[MAX_MESSAGE_LENGTH];
         response[0] = '\0';
         //handle get command
@@ -47,9 +43,6 @@ void* handle_client(void* arg){
                 strcat(response, "Error: 'get' command requires key\n");
             } else {
                 value_t val = get(database, command.key);
-                printf("VALUE: "); 
-                print_value(val);
-                printf("\n");
                 strcat(response, val_to_str(val));
             }
         } else if(strcmp(command.command, "set") == 0) {
@@ -85,6 +78,9 @@ void* handle_client(void* arg){
                 }
 
             }
+        } else if (strcmp(command.command, "exit") == 0) {
+            //added random characters to make sure something like this wouldn't be stored in the actual database
+            strcat(response, "EXIT890\t"); 
         } else {
             strcat(response, "Error: didn't recognize command\n");
         }
@@ -112,13 +108,17 @@ command_t parse_input(char* input) {
 
     char* func = strtok(input, " ");
     char* key = strtok(NULL, " ");
-    char* val = strtok(NULL, " ");
+    char* val = NULL;
 
-    if (func[strlen(func) - 1] == '\n') {
+    if (key != NULL) {
+        val = strtok(NULL, " ");
+    }
+
+    if (func && func[strlen(func) - 1] == '\n') {
         func[strlen(func) - 1] = '\0';
-    } else if (key[strlen(key) - 1] == '\n') {
+    } else if (key && key[strlen(key) - 1] == '\n') {
         key[strlen(key) - 1] = '\0';
-    } else if (val[strlen(val) - 1] == '\n') {
+    } else if (val && val[strlen(val) - 1] == '\n') {
         val[strlen(val) - 1] = '\0';
     }
     
@@ -127,12 +127,6 @@ command_t parse_input(char* input) {
         func[i] = tolower(func[i]);
     } 
     
-    //verify function exists
-    if (strcmp(func, "get") != 0 && strcmp(func, "set") != 0 && strcmp(func, "del") != 0 && strcmp(func, "exists") != 0) {
-        func = NULL;
-    }
-    
-
     value_t value; 
     if (val != NULL) {
         int is_int = 1;

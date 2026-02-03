@@ -18,7 +18,10 @@ $(TARGET): $(OBJ_FILES)
 $(OBJ)/%.o: $(SRC)/%.c | $(OBJ)
 	$(CC) $(CFLAGS) -I$(INC) -c $< -o $@
 
+client:
+	$(CC) $(CFLAGS) client/client.c -o client
+
 clean:
-	rm -rf $(OBJ)/*.o $(TARGET)
+	rm -rf $(OBJ)/*.o $(TARGET) client/client
 
 .PHONY: all clean

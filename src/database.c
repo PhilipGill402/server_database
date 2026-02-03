@@ -174,6 +174,12 @@ void set(database_t* database, char* key, value_t value) {
         
         // if the key already exists then just replace the value
         if (strcmp(curr_node->entry.key, key) == 0) {
+            
+            free(curr_node->entry.key);
+            if (curr_node->entry.val.type == STRING) {
+                free(curr_node->entry.val.value.s);
+            }
+
             curr_node->entry = entry;
         } else {
             // create new node and assign it to the next node in the chain 
@@ -243,6 +249,11 @@ void del(database_t* database, char* key) {
         } else {
             idx = prev_node->next;
             prev_node->next = curr_node->next; 
+        }
+        
+        free(curr_node->entry.key);
+        if (curr_node->entry.val.type == STRING) {
+            free(curr_node->entry.val.value.s);
         }
 
         free_node(database, idx); 
